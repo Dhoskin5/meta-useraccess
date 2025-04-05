@@ -9,7 +9,7 @@ This system uses a fixed UID allocation strategy to ensure consistency across bu
 | `root`       | `0`   | Superuser                       | Reserved by the system             |
 | `adminuser`  | `1000`| Primary system administrator    | SSH login + `sudo` privileges      |
 | `normaluser` | `1001`| Default runtime user            | For general operation (Development)|
-| `appuser`    | `1100`| Application daemon/service user | Used by services/apps              |
+| `appuser`    | `1100`| daemon/service user             | Used by services/apps              |
 | `logger`     | `1101`| Log collection & maintenance    | May run cron or journald tasks     |
 
 ## UID Ranges
@@ -19,7 +19,7 @@ This system uses a fixed UID allocation strategy to ensure consistency across bu
 | `0`           | System root user                 |
 | `1 – 999`     | System/daemon users (OS reserved)|
 | `1000 – 1099` | Interactive users (admin/dev)    |
-| `1100 – 1999` | Custom application users         |
+| `1100 – 1999` | daemon users                     |
 | `2000+`       | Reserved for runtime/dynamic use |
 
 ## Policy Guidelines
