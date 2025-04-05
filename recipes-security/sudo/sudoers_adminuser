@@ -1,0 +1,1 @@
+adminuser ALL=(ALL) NOPASSWD: ALL
