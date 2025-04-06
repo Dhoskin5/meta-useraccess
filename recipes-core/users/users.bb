@@ -13,9 +13,9 @@ inherit useradd
 USERADD_PACKAGES = "${PN}"
 RDEPENDS:${PN}+= "sudo sudo-lib bash"
 USERADD_PARAM:${PN} = "\
-    -m -u 1000 -G sudo,adm -s /bin/bash -p '!' adminuser; \
-    -m -u 1001 -s /bin/bash -p '!' normaluser \
-    -m -u 1100 -s /bin/bash -p '!' appuser \
+    -m -u 1000 -G sudo,adm -s /bin/bash -p '*' adminuser; \
+    -m -u 1001 -s /bin/bash -p '*' normaluser; \
+    -m -u 1100 -s /bin/bash -p '*' appuser; \
     "
 
 
@@ -23,10 +23,16 @@ do_install:append() {
 
     install -d 700 ${D}/home/appuser/.ssh
     install -m 600 ${WORKDIR}/id_ed25519_app.pub ${D}/home/appuser/.ssh/authorized_keys
+    
+    
     install -d 700 ${D}/home/adminuser/.ssh
     install -m 600 ${WORKDIR}/id_ed25519_admin.pub ${D}/home/adminuser/.ssh/authorized_keys
+    
+    
     install -d 700 ${D}/home/normaluser/.ssh
     install -m 600 ${WORKDIR}/id_ed25519_user.pub ${D}/home/normaluser/.ssh/authorized_keys
+    
+    
     install -d 700 ${D}/root/.ssh
     install -m 600 ${WORKDIR}/id_ed25519_root.pub ${D}/root/.ssh/authorized_keys       
     

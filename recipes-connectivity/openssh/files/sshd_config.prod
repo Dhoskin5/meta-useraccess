@@ -1,0 +1,27 @@
+# sshd_config.prod - Secure Production SSH configuration
+
+Port 22
+AddressFamily inet
+
+# Explicitly disallow root login
+PermitRootLogin no
+
+# Allow only public key authentication
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+PermitEmptyPasswords no
+
+# Limit SSH access explicitly to adminuser only
+AllowUsers adminuser
+
+# Use PAM for additional system-level security
+UsePAM yes
+
+# Secure logging level
+LogLevel INFO
+
+AuthorizedKeysFile .ssh/authorized_keys
+
+Subsystem sftp /usr/libexec/sftp-server
+

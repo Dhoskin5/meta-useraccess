@@ -1,0 +1,25 @@
+# sshd_config.dev - Development SSH configuration
+
+Port 22
+AddressFamily any
+
+# Allow root login (only for development!)
+PermitRootLogin yes
+
+# Allow public key and passwords (development convenience)
+PubkeyAuthentication yes
+PasswordAuthentication yes
+
+# No empty passwords even in dev
+PermitEmptyPasswords no
+
+ChallengeResponseAuthentication no
+UsePAM yes
+
+# Easy debugging with verbose logging
+LogLevel DEBUG
+
+AuthorizedKeysFile .ssh/authorized_keys
+
+Subsystem sftp /usr/libexec/sftp-server
+
