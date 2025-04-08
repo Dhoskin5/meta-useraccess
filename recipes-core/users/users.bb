@@ -9,8 +9,11 @@ SSH_USERS = "root adminuser normaluser appuser"
 
 FILES:${PN} += " \
     /home/appuser/.ssh \
+    /home/appuser/.ssh/authorized_keys \
     /home/normaluser/.ssh \
+    /home/normaluser/.ssh/authorized_keys \
     /home/adminuser/.ssh \
+    /home/adminuser/.ssh/authorized_keys \
 "
 
 USERADD_PACKAGES = "${PN}"
@@ -39,17 +42,19 @@ do_install:append() {
     install -m 0600 -o 1000 -g 1000 ${ADMIN_PUBKEY_PATH} ${D}/home/adminuser/.ssh/authorized_keys   
     
     # Only install root SSH key if enabled via image feature
-    if echo "${IMAGE_FEATURES}" | grep -q "ssh-root-access"; then    
-        install -d -m 0700 -o 0 -g 0 ${D}/root/.ssh
-        install -m 0600 -o 0 -g 0 ${ROOT_PUBKEY_PATH} ${D}/root/.ssh/authorized_keys
-    else      
-        bbnote "Skipping root SSH key install (ssh-root-access not in IMAGE_FEATURES)"
-    fi	 
+    if [ "${SSH_ROOT_ACCESS_ENABLED}" = "1" ]; then
+	    install -d -m 0700 -o 0 -g 0 ${D}/root/.ssh
+	    install -m 0600 -o 0 -g 0 ${ROOT_PUBKEY_PATH} ${D}/root/.ssh/authorized_keys
+	else
+	    bbnote "Skipping root SSH key install (SSH_ROOT_ACCESS_ENABLED != 1)"
+	fi 
 }
 
+# Dynamically add root key to FILES only if feature enabled
 python __anonymous() {
-    if 'ssh-root-access' in (d.getVar('IMAGE_FEATURES') or '').split():
+    if d.getVar('SSH_ROOT_ACCESS_ENABLED') == "1":
         d.appendVar("FILES:${PN}", " /root/.ssh")
     else:
-        bb.note("Not adding root authorized_keys to FILES since ssh-root-access is not enabled")
+        bb.note("Not adding root authorized_keys to FILES since SSH_ROOT_ACCESS_ENABLED != 1")
 }
+

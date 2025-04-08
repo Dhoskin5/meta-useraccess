@@ -9,21 +9,22 @@
 #   - RSA and ED25519 key support
 #   - Configurable bit-length (for RSA)
 #   - Private keys never included in image rootfs
-#   - Keys generated only when 'ssh-keys' is in IMAGE_FEATURES
+#   - Keys generated only when SSH_KEYS_ENABLED = "1"
 #   - Per-user directory cleanup before regeneration
 #   - Secure permissions (0700) on generated key folders
 #   - Manual cleanup task: `bitbake -c clean_ssh_keys <target>`
 #
 # Required Configuration:
-#   SSH_KEYS_DIR    = "${TOPDIR}/generated-keys"
-#   SSH_USERS       = "admin user1"
+#   SSH_KEYS_ENABLED = "1"
+#   SSH_KEYS_DIR     = "${TOPDIR}/generated-keys"
+#   SSH_USERS        = "admin user1"
 #
 # Optional Overrides:
-#   SSH_KEY_TYPE    = "rsa"      # or "ed25519"
-#   SSH_KEY_BITS    = "4096"     # RSA only
+#   SSH_KEY_TYPE     = "rsa"      # or "ed25519"
+#   SSH_KEY_BITS     = "4096"     # RSA only
 #
-# Enable in your image:
-#   IMAGE_FEATURES += "ssh-keys"
+# Optional:
+#   SSH_ROOT_ACCESS_ENABLED = "1"  # Used in consuming recipes for root key install logic
 #
 # Use in your recipe:
 #   inherit ssh-keys
@@ -34,9 +35,8 @@ python do_generate_ssh_keys() {
     import subprocess
     import shutil
 
-    image_features = d.getVar('IMAGE_FEATURES') or ""
-    if 'ssh-keys' not in image_features.split():
-        bb.note("Skipping SSH key generation (ssh-keys not in IMAGE_FEATURES)")
+    if d.getVar("SSH_KEYS_ENABLED") != "1":
+        bb.note("Skipping SSH key generation (SSH_KEYS_ENABLED is not set to '1')")
         return
 
     keys_dir = d.getVar('SSH_KEYS_DIR')
@@ -83,6 +83,7 @@ python do_generate_ssh_keys() {
 }
 
 addtask do_generate_ssh_keys before do_install
+
 
 python do_clean_ssh_keys() {
     import os
