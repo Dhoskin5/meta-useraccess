@@ -4,6 +4,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 inherit useradd ssh-keys
 RDEPENDS:${PN} += "bash"
+do_install[recrdeptask] += "do_generate_ssh_keys"
+
 
 SSH_USERS = "root adminuser normaluser appuser"
 
@@ -33,28 +35,20 @@ USERADD_PARAM:${PN} = "\
 do_install:append() {
 
     install -d -m 0700 -o 1100 -g 1100 ${D}/home/appuser/.ssh
-    install -m 0600 -o 1100 -g 1100 ${APPUSER_PUBKEY_PATH} ${D}/home/appuser/.ssh/authorized_keys
+    install -m 0600 -o 1100 -g 1100 ${SSH_KEYS_DIR}/appuser_key.pub ${D}/home/appuser/.ssh/authorized_keys
       
     install -d -m 0700 -o 1001 -g 1001 ${D}/home/normaluser/.ssh
-    install -m 0600 -o 1001 -g 1001 ${NORMALUSER_PUBKEY_PATH} ${D}/home/normaluser/.ssh/authorized_keys
+    install -m 0600 -o 1001 -g 1001 ${SSH_KEYS_DIR}/normaluser_key.pub ${D}/home/normaluser/.ssh/authorized_keys
     
     install -d -m 0700 -o 1000 -g 1000 ${D}/home/adminuser/.ssh
-    install -m 0600 -o 1000 -g 1000 ${ADMIN_PUBKEY_PATH} ${D}/home/adminuser/.ssh/authorized_keys   
+    install -m 0600 -o 1000 -g 1000 ${SSH_KEYS_DIR}/adminuser_key.pub ${D}/home/adminuser/.ssh/authorized_keys   
     
     # Only install root SSH key if enabled via image feature
     if [ "${SSH_ROOT_ACCESS_ENABLED}" = "1" ]; then
 	    install -d -m 0700 -o 0 -g 0 ${D}/root/.ssh
-	    install -m 0600 -o 0 -g 0 ${ROOT_PUBKEY_PATH} ${D}/root/.ssh/authorized_keys
+	    install -m 0600 -o 0 -g 0 ${SSH_KEYS_DIR}/root_key.pub ${D}/root/.ssh/authorized_keys
 	else
 	    bbnote "Skipping root SSH key install (SSH_ROOT_ACCESS_ENABLED != 1)"
 	fi 
-}
-
-# Dynamically add root key to FILES only if feature enabled
-python __anonymous() {
-    if d.getVar('SSH_ROOT_ACCESS_ENABLED') == "1":
-        d.appendVar("FILES:${PN}", " /root/.ssh")
-    else:
-        bb.note("Not adding root authorized_keys to FILES since SSH_ROOT_ACCESS_ENABLED != 1")
 }
 

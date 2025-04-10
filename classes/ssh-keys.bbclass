@@ -46,7 +46,7 @@ python do_generate_ssh_keys() {
     users_raw = d.getVar('SSH_USERS') or ""
     users = users_raw.split()
 
-    key_type = d.getVar('SSH_KEY_TYPE') or 'rsa'
+    key_type = d.getVar('SSH_KEY_TYPE') or 'ed25519'
     key_bits = d.getVar('SSH_KEY_BITS') or '4096'
 
     for user in users:
@@ -55,15 +55,17 @@ python do_generate_ssh_keys() {
             continue
 
         user_dir = os.path.join(keys_dir, user_sanitized)
+        bb.warn(f"[ssh-keys.bbclass] Generating key for: {user_sanitized}")
 
         if os.path.exists(user_dir):
             bb.note(f"Removing existing key directory for user: {user_sanitized}")
             shutil.rmtree(user_dir)
 
-        os.makedirs(user_dir, mode=0o700, exist_ok=True)
+        priv_key = os.path.join(keys_dir, f"{user_sanitized}_key")
+        pub_key = priv_key + ".pub"
 
-        priv_key = os.path.join(user_dir, 'id_' + key_type)
-        pub_key = priv_key + '.pub'
+        bb.warn(f"[ssh-keys.bbclass] Private key path: {priv_key}")
+        bb.warn(f"[ssh-keys.bbclass] Public key path:  {pub_key}")
 
         bb.note(f"Generating {key_type.upper()} SSH key for user: {user_sanitized}")
         try:
@@ -74,8 +76,7 @@ python do_generate_ssh_keys() {
         except subprocess.CalledProcessError as e:
             bb.fatal(f"SSH key generation failed for user '{user_sanitized}': {e}")
 
-        key_var = f"{user.upper()}_PUBKEY_PATH"
-        d.setVar(key_var, pub_key)
+
 
         image_rootfs = d.getVar('IMAGE_ROOTFS')
         if image_rootfs and priv_key.startswith(image_rootfs):
