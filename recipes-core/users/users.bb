@@ -7,7 +7,7 @@ RDEPENDS:${PN} += "bash"
 do_install[recrdeptask] += "do_generate_ssh_keys"
 
 
-SSH_USERS = "root adminuser normaluser appuser"
+SSH_USERS = "adminuser normaluser appuser"
 
 FILES:${PN} += " \
     /home/appuser/.ssh \
@@ -42,13 +42,5 @@ do_install:append() {
     
     install -d -m 0700 -o 1000 -g 1000 ${D}/home/adminuser/.ssh
     install -m 0600 -o 1000 -g 1000 ${SSH_KEYS_DIR}/adminuser_key.pub ${D}/home/adminuser/.ssh/authorized_keys   
-    
-    # Only install root SSH key if enabled via image feature
-    if [ "${SSH_ROOT_ACCESS_ENABLED}" = "1" ]; then
-	    install -d -m 0700 -o 0 -g 0 ${D}/root/.ssh
-	    install -m 0600 -o 0 -g 0 ${SSH_KEYS_DIR}/root_key.pub ${D}/root/.ssh/authorized_keys
-	else
-	    bbnote "Skipping root SSH key install (SSH_ROOT_ACCESS_ENABLED != 1)"
-	fi 
 }
 
