@@ -1,43 +1,83 @@
-# meta-useraccess
 
-> A portable Yocto layer for user management and secure access policies.
+> A portable Yocto layer for secure user management, static UID policies, and abstract SSH key generation.
 
 ---
 
 ## Overview
 
-`meta-useraccess` is a portable Yocto/OpenEmbedded layer that manages system users, SSH access, and login policies for embedded Linux systems. It provides **secure defaults**, a consistent UID policy, and clear separation between development and production access control.
+`meta-useraccess` is a reusable Yocto/OpenEmbedded layer for defining system users, enforcing secure login defaults, and generating SSH keypairs at build time.
 
-This project was created to offer an easy, maintainable way to add secure user access to any Yocto-based image using a single, reusable layer.
+It was created to provide a single, maintainable way to implement secure access control across embedded devices. The layer supports production-grade SSH policies, build-time key provisioning, and UID consistency across system variants.
 
 ---
 
 ## Features
 
-- ✅ Define custom system users with static UIDs, groups, and shells
-- 🔐 Disable password-based logins by default (`-p '!'`)
-- 🔑 Install SSH public keys for each user at image build time
-- 📁 Provide hardened `sshd_config` defaults (optional override)
-- 🧪 Tested with Yocto 5.0 (Scarthgap)
+- Define system users with static UIDs, shells, and group assignments
+-  Disable password-based login by default (`-p '*'`)
+-  Generate SSH keypairs at build time using abstract labels (not just users)
+-  Public keys are installed to authorized locations in the image
+-  Optional recipe for root-only SSH access
+-  Tested with Yocto 5.0 (Scarthgap)
+
+---
+
+## Getting Started
+
+### 1. Add the layer to your build:
+
+```bash
+bitbake-layers add-layer meta-useraccess
+```
+
+### 2. Configure SSH key labels in `local.conf` or Image:
+
+```ini
+SSH_KEYS_DIR = "${TOPDIR}/generated-keys"
+```
+
+The directory will be created at build time. Keys will only be generated if they don’t already exist.
+
+---
+
+## Included Recipes
+
+| Recipe                      | Purpose                                             |
+|----------------------------|-----------------------------------------------------|
+| `users.bb`                 | Adds `adminuser`, `normaluser`, and `appuser`       |
+| `root-ssh-key.bb`          | Installs SSH key for root (optional)                |
+| `openssh_%.bbappend`       | Installs dev `sshd_config` (can be customized)      |
+| `ssh-keys.bbclass`         | Generates SSH keypairs from labels (abstract/flexible) |
 
 ---
 
 ## UID Policy
 
-User IDs are statically assigned to avoid conflicts across devices. See [`UID_Policy.md`](./UID_Policy.md) for full details.
+User IDs are statically assigned for consistency across devices. See [`UID_Policy.md`](./UID_Policy.md) for full details.
 
 | Username     | UID   | Description                     | Notes                              |
 |--------------|-------|----------------------------------|-----------------------------------|
-| `root`       | `0`   | root                            | Reserved by the system             |
+| `root`       | `0`   | Superuser                       | Reserved by the system             |
 | `adminuser`  | `1000`| Primary system administrator    | SSH login + `sudo` privileges      |
 | `normaluser` | `1001`| Default runtime user            | For general operation (Development)|
-| `appuser`    | `1100`| daemon/service user             | Used by daemon/services            |
-| `logger`     | `1101`| Log collection & maintenance    | May run cron or journald tasks     |
+| `appuser`    | `1100`| Daemon/service user             | Used by background services        |
+
+---
+
+## Compatibility
+
+```ini
+LAYERSERIES_COMPAT_useraccess = "scarthgap"
+```
+
+Tested on:
+- Yocto 5.0 (Scarthgap)
+- QEMU AArch64 targets
+- Rockchip platforms
 
 ---
 
 ## License
 
-[MIT License](./LICENSE)  
-Copyright (c) 2025  
-Dustin Hoskins
+[MIT License](./LICENSE)
+© 2025 Dustin Hoskins

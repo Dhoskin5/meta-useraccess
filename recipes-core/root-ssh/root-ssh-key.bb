@@ -1,11 +1,11 @@
 SUMMARY = "Installs authorized_keys file for root"
-DESCRIPTION = "A BitBake recipe that generates and installs a SSH public key for the root user."
+DESCRIPTION = "Installs a build-time generated SSH public key for the root user using the ssh-keys class."
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 inherit ssh-keys
 
-SSH_USERS = "root"
+SSH_KEY_LABELS = "root"
 
 RDEPENDS:${PN} = "openssh"
 
