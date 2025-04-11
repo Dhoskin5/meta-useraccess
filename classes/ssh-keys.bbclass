@@ -43,6 +43,10 @@ python do_generate_ssh_keys() {
     if not keys_dir:
         bb.fatal("SSH_KEYS_DIR is not set. You must define it in local.conf or your image recipe.")
 
+    if not os.path.exists(keys_dir):
+        bb.note(f"Creating SSH key output directory: {keys_dir}")
+        os.makedirs(keys_dir, exist_ok=True)
+
     users_raw = d.getVar('SSH_USERS') or ""
     users = users_raw.split()
 
@@ -53,19 +57,13 @@ python do_generate_ssh_keys() {
         user_sanitized = user.strip()
         if not user_sanitized:
             continue
-
-        user_dir = os.path.join(keys_dir, user_sanitized)
-        bb.warn(f"[ssh-keys.bbclass] Generating key for: {user_sanitized}")
-
-        if os.path.exists(user_dir):
-            bb.note(f"Removing existing key directory for user: {user_sanitized}")
-            shutil.rmtree(user_dir)
-
+        
         priv_key = os.path.join(keys_dir, f"{user_sanitized}_key")
         pub_key = priv_key + ".pub"
 
-        bb.warn(f"[ssh-keys.bbclass] Private key path: {priv_key}")
-        bb.warn(f"[ssh-keys.bbclass] Public key path:  {pub_key}")
+        if os.path.isfile(priv_key) or os.path.isfile(pub_key):
+            bb.warn(f"SSH keys for user '{user_sanitized}' already exist. Skipping generation.")
+            continue
 
         bb.note(f"Generating {key_type.upper()} SSH key for user: {user_sanitized}")
         try:
@@ -76,7 +74,8 @@ python do_generate_ssh_keys() {
         except subprocess.CalledProcessError as e:
             bb.fatal(f"SSH key generation failed for user '{user_sanitized}': {e}")
 
-
+        bb.warn(f"[ssh-keys.bbclass] Private key path: {priv_key}")
+        bb.warn(f"[ssh-keys.bbclass] Public key path:  {pub_key}")
 
         image_rootfs = d.getVar('IMAGE_ROOTFS')
         if image_rootfs and priv_key.startswith(image_rootfs):
