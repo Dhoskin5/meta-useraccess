@@ -2,42 +2,37 @@
 #
 # Secure, build-time SSH key generation for Yocto-based images.
 #
-# This class dynamically generates per-user SSH keypairs at build time,
-# providing public key paths to recipes via BitBake variables.
+# This class dynamically generates per-user SSH keypairs at build time.
+# Keys are stored outside of the root filesystem and can be used by
+# consuming recipes to install public keys into user home directories.
 #
 # Features:
 #   - RSA and ED25519 key support
-#   - Configurable bit-length (for RSA)
-#   - Private keys never included in image rootfs
-#   - Keys generated only when SSH_KEYS_ENABLED = "1"
-#   - Per-user directory cleanup before regeneration
-#   - Secure permissions (0700) on generated key folders
-#   - Manual cleanup task: `bitbake -c clean_ssh_keys <target>`
+#   - Configurable bit-length (RSA only)
+#   - Private keys are never installed to target images
+#   - Automatically skips generation if key already exists
+#   - Enforces secure permissions (0700) on output directory
 #
 # Required Configuration:
-#   SSH_KEYS_ENABLED = "1"
 #   SSH_KEYS_DIR     = "${TOPDIR}/generated-keys"
-#   SSH_USERS        = "admin user1"
+#   SSH_KEY_LABELS        = "adminuser normaluser appuser"
 #
 # Optional Overrides:
-#   SSH_KEY_TYPE     = "rsa"      # or "ed25519"
+#   SSH_KEY_TYPE     = "rsa"      # Default: ed25519
 #   SSH_KEY_BITS     = "4096"     # RSA only
 #
-# Optional:
-#   SSH_ROOT_ACCESS_ENABLED = "1"  # Used in consuming recipes for root key install logic
-#
-# Use in your recipe:
+# Example usage in a recipe:
 #   inherit ssh-keys
-#   install -m 0600 ${ADMIN_PUBKEY_PATH} /home/admin/.ssh/authorized_keys
+#
+#   do_install:append() {
+#       install -d -m 0700 -o 1000 -g 1000 ${D}/home/adminuser/.ssh
+#       install -m 0600 -o 1000 -g 1000 ${SSH_KEYS_DIR}/adminuser_key.pub ${D}/home/adminuser/.ssh/authorized_keys
+#   }
 
-python do_generate_ssh_keys() {
+python do_prepare_ssh_keys() {
     import os
     import subprocess
     import shutil
-
-    if d.getVar("SSH_KEYS_ENABLED") != "1":
-        bb.note("Skipping SSH key generation (SSH_KEYS_ENABLED is not set to '1')")
-        return
 
     keys_dir = d.getVar('SSH_KEYS_DIR')
     if not keys_dir:
@@ -47,7 +42,7 @@ python do_generate_ssh_keys() {
         bb.note(f"Creating SSH key output directory: {keys_dir}")
         os.makedirs(keys_dir, exist_ok=True)
 
-    users_raw = d.getVar('SSH_USERS') or ""
+    users_raw = d.getVar('SSH_KEY_LABELS') or ""
     users = users_raw.split()
 
     key_type = d.getVar('SSH_KEY_TYPE') or 'ed25519'
@@ -57,7 +52,7 @@ python do_generate_ssh_keys() {
         user_sanitized = user.strip()
         if not user_sanitized:
             continue
-        
+
         priv_key = os.path.join(keys_dir, f"{user_sanitized}_key")
         pub_key = priv_key + ".pub"
 
@@ -82,24 +77,4 @@ python do_generate_ssh_keys() {
             bb.fatal(f"Private key path {priv_key} is inside IMAGE_ROOTFS. This must not happen.")
 }
 
-addtask do_generate_ssh_keys before do_install
-
-
-python do_clean_ssh_keys() {
-    import os
-    import shutil
-
-    keys_dir = d.getVar('SSH_KEYS_DIR')
-    if not keys_dir:
-        bb.warn("SSH_KEYS_DIR not set. Skipping cleanup.")
-        return
-
-    if os.path.exists(keys_dir):
-        bb.note(f"Removing all generated SSH keys from: {keys_dir}")
-        shutil.rmtree(keys_dir)
-    else:
-        bb.note(f"No SSH key directory found to clean at: {keys_dir}")
-}
-
-addtask do_clean_ssh_keys
-
+addtask do_prepare_ssh_keys before do_install

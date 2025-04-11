@@ -1,13 +1,13 @@
-SUMMARY = "Add adminuser, normaluser, appuser; and optional key access"
+SUMMARY = "Add adminuser, normaluser, appuser; and ssh key access"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
 inherit useradd ssh-keys
 RDEPENDS:${PN} += "bash"
-do_install[recrdeptask] += "do_generate_ssh_keys"
+do_install[recrdeptask] += "do_prepare_ssh_keys"
 
-
-SSH_USERS = "adminuser normaluser appuser"
+# Generate a key for each user
+SSH_KEY_LABELS = "adminuser normaluser appuser"
 
 FILES:${PN} += " \
     /home/appuser/.ssh \
