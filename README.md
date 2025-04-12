@@ -22,6 +22,24 @@ It was created to provide a single, maintainable way to implement secure access 
 
 ---
 
+## SSH Configuration Behavior
+
+The layer installs an `sshd_config` file appropriate to the image type:
+
+- **Development images** (default) allow root login and password authentication for convenience.
+- **Production images** install a hardened configuration:
+  - Only key-based login is allowed
+  - `adminuser` and `normaluser` are the only users permitted SSH access
+  - `root` login is explicitly disabled
+
+To enable production mode, set the following in your image recipe or `local.conf`:
+
+```bitbake
+PRODUCTION_IMAGE = "1"
+```
+
+---
+
 ## Getting Started
 
 ### 1. Add the layer to your build:
