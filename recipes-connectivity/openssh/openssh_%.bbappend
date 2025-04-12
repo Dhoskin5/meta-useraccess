@@ -11,5 +11,10 @@ SRC_URI:append = " \
 "
 
 do_install:append() {
+    if [ "${PRODUCTION_IMAGE}" = "1" ]; then
+        install -m 0600 ${WORKDIR}/sshd_config.prod ${D}${sysconfdir}/ssh/sshd_config
+    else
+        bbwarn "meta-useraccess: Installing development sshd_config — not suitable for production use"
         install -m 0600 ${WORKDIR}/sshd_config.dev ${D}${sysconfdir}/ssh/sshd_config
+    fi
 }

@@ -13,7 +13,7 @@ ChallengeResponseAuthentication no
 PermitEmptyPasswords no
 
 # Limit SSH access explicitly to adminuser only
-AllowUsers adminuser
+AllowUsers adminuser normaluser
 
 # Use PAM for additional system-level security
 UsePAM yes
